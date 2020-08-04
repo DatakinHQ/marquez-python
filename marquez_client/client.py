@@ -19,7 +19,7 @@ from .models import DatasetType, SourceType, JobType, DatasetFieldType
 from marquez_client import errors
 from marquez_client import log
 from marquez_client.constants import (
-    DEFAULT_HOST, DEFAULT_PORT, DEFAULT_TIMEOUT_MS, DEFAULT_NAMESPACE_NAME
+    DEFAULT_PROTOCOL, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_TIMEOUT_MS, DEFAULT_NAMESPACE_NAME
 )
 from marquez_client.version import VERSION
 from six.moves.urllib.parse import quote
