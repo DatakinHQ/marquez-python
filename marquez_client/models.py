@@ -28,6 +28,12 @@ class DatasetType(Enum):
     HTTP_ENDPOINT = "HTTP_ENDPOINT"
 
 
+class JobType(Enum):
+    BATCH = "BATCH"
+    STREAM = "STREAM"
+    SERVICE = "SERVICE"
+
+
 class RunState(Enum):
     NEW = 'NEW'
     RUNNING = 'RUNNING'

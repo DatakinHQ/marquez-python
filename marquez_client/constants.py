@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DEFAULT_PROTOCOL= 'http'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT_MS = 10000
