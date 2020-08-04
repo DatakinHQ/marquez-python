@@ -14,12 +14,13 @@ import json
 import os
 import requests
 import time
+import uuid
 
-from .models import DatasetType, SourceType, JobType, DatasetFieldType
+from .models import DatasetType, SourceType, JobType, RunCommands, DatasetFieldType
 from marquez_client import errors
 from marquez_client import log
 from marquez_client.constants import (
-    DEFAULT_PROTOCOL, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_TIMEOUT_MS, DEFAULT_NAMESPACE_NAME
+    ENABLE_SSL, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_TIMEOUT_MS
 )
 from marquez_client.version import VERSION
 from six.moves.urllib.parse import quote
@@ -29,43 +30,31 @@ _API_PATH = 'api/v1'
 _USER_AGENT = f'marquez-python/{VERSION}'
 _HEADERS = {'User-Agent': _USER_AGENT}
 
-_NAMESPACE_LENGTH_LIMIT = 1024
-_SOURCE_LENGTH_LIMIT = 1024
-_DATASET_LENGTH_LIMIT = 1024
-_JOB_LENGTH_LIMIT = 1024
 
 class MarquezClient(object):
-    def __init__(self, protocol=None, host=None, port=None,
-                 timeout_ms=None, namespace_name=None):
-        protocol = protocol or os.environ.get('PROTOCOL', DEFAULT_PROTOCOL)
+    def __init__(self, enable_ssl=False, host=None, port=None, timeout_ms=None):
+        enable_ssl = enable_ssl or os.environ.get('ENABLE_SSL', ENABLE_SSL)
         host = host or os.environ.get('MARQUEZ_HOST', DEFAULT_HOST)
         port = port or os.environ.get('MARQUEZ_PORT', DEFAULT_PORT)
         self._timeout = self._to_seconds(timeout_ms or os.environ.get(
             'MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS)
         )
-        self._namespace_name = namespace_name or os.environ.get(
-            'MARQUEZ_NAMESPACE', DEFAULT_NAMESPACE_NAME
-        )
+
+        protocol = 'http'
+        if enable_ssl:
+            protocol = 'https'
+
         self._api_base = f'{protocol}://{host}:{port}/{_API_PATH}'
 
-        if not port or port == 8080 or port == 80:
+        if not port or port == 80:
             self._api_base = f'{protocol}://{host}/{_API_PATH}'
 
         log.debug(self._api_base)
 
-    @property
-    def namespace(self):
-        return self._namespace_name
-
     # Namespace API
     def create_namespace(self, namespace_name, owner_name, description=None):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-        if not owner_name:
-            raise ValueError('owner_name must not be None')
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(owner_name, 'owner_name')
 
         payload = {
             'ownerName': owner_name
@@ -80,11 +69,7 @@ class MarquezClient(object):
         )
 
     def get_namespace(self, namespace_name):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
 
         return self._get(self._url('/namespaces/{0}', namespace_name))
 
@@ -100,17 +85,13 @@ class MarquezClient(object):
     # Sources API
     def create_source(self, source_name, source_type, connection_url,
                       description=None):
-        if not source_name:
-            raise ValueError('source_name must not be None')
-        if len(source_name) > _SOURCE_LENGTH_LIMIT:
-            raise ValueError('source_name length is {0}, must be <= {1}',
-                             len(source_name), _SOURCE_LENGTH_LIMIT)
+        self._check_name_length(source_name, 'source_name')
+
+        if not isinstance(source_type, SourceType):
+            raise ValueError(f'source_type must be an instance of SourceType')
 
         if not connection_url:
             raise ValueError('connection_url must not be None')
-
-        if not isinstance(source_type, SourceType):
-            raise ValueError(f'source_type must be instance of SourceType')
 
         payload = {
             'type': source_type.value,
@@ -124,11 +105,7 @@ class MarquezClient(object):
                          payload=payload)
 
     def get_source(self, source_name):
-        if not source_name:
-            raise ValueError('source_name must not be None')
-        if len(source_name) > _SOURCE_LENGTH_LIMIT:
-            raise ValueError('source_name length is {0}, must be <= {1}',
-                             len(source_name), _SOURCE_LENGTH_LIMIT)
+        self._check_name_length(source_name, 'source_name')
 
         return self._get(self._url('/sources/{0}', source_name))
 
@@ -147,31 +124,16 @@ class MarquezClient(object):
                        description=None, run_id=None,
                        schema_location=None,
                        fields=None, tags=None):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-
-        if not dataset_name:
-            raise ValueError('dataset_name must not be None')
-        if len(dataset_name) > _DATASET_LENGTH_LIMIT:
-            raise ValueError('dataset_name length is {0}, must be <= {1}',
-                             len(dataset_name), _DATASET_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(dataset_name, 'dataset_name')
 
         if not isinstance(dataset_type, DatasetType):
-            raise ValueError('dataset_type must be instance of DatasetType')
+            raise ValueError('dataset_type must be an instance of DatasetType')
         if dataset_type == DatasetType.STREAM and not schema_location:
             raise ValueError('STREAM type datasets must have schema_location')
 
-        if not physical_name:
-            raise ValueError('physical_name must not be None')
-
-        if not source_name:
-            raise ValueError('source_name must not be None')
-        if len(source_name) > _SOURCE_LENGTH_LIMIT:
-            raise ValueError('source_name length is {0}, must be <= {1}',
-                             len(source_name), _SOURCE_LENGTH_LIMIT)
+        self._check_name_length(physical_name, 'physical_name')
+        self._check_name_length(source_name, 'source_name')
 
         payload = {
             'type': dataset_type.value,
@@ -201,17 +163,8 @@ class MarquezClient(object):
         )
 
     def get_dataset(self, namespace_name, dataset_name):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-
-        if not dataset_name:
-            raise ValueError('dataset_name must not be None')
-        if len(dataset_name) > _DATASET_LENGTH_LIMIT:
-            raise ValueError('dataset_name length is {0}, must be <= {1}',
-                             len(dataset_name), _DATASET_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(dataset_name, 'dataset_name')
 
         return self._get(
             self._url('/namespaces/{0}/datasets/{1}',
@@ -219,11 +172,7 @@ class MarquezClient(object):
         )
 
     def list_datasets(self, namespace_name, limit=None, offset=None):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
 
         return self._get(
             self._url('/namespaces/{0}/datasets', namespace_name),
@@ -234,17 +183,8 @@ class MarquezClient(object):
         )
 
     def tag_dataset(self, namespace_name, dataset_name, tag_name):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-
-        if not dataset_name:
-            raise ValueError('dataset_name must not be None')
-        if len(dataset_name) > _DATASET_LENGTH_LIMIT:
-            raise ValueError('dataset_name length is {0}, must be <= {1}',
-                             len(dataset_name), _DATASET_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(dataset_name, 'dataset_name')
 
         if not tag_name:
             raise ValueError('tag_name must not be None')
@@ -255,23 +195,10 @@ class MarquezClient(object):
         )
 
     def tag_dataset_field(self, namespace_name, dataset_name, field_name, tag_name):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-
-        if not dataset_name:
-            raise ValueError('dataset_name must not be None')
-        if len(dataset_name) > _DATASET_LENGTH_LIMIT:
-            raise ValueError('dataset_name length is {0}, must be <= {1}',
-                             len(dataset_name), _DATASET_LENGTH_LIMIT)
-
-        if not field_name:
-            raise ValueError('field_name must not be None')
-
-        if not tag_name:
-            raise ValueError('tag_name must not be None')
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(dataset_name, 'dataset_name')
+        self._check_name_length(field_name, 'field_name')
+        self._check_name_length(tag_name, 'tag_name')
 
         return self._post(
             self._url('/namespaces/{0}/datasets/{1}/fields/{2}/tags/{3}',
@@ -281,20 +208,11 @@ class MarquezClient(object):
     # Jobs API
     def create_job(self, namespace_name, job_name, job_type, location=None, input_dataset=None,
                    output_dataset=None, description=None, context=None):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-
-        if not job_name:
-            raise ValueError('job_name must not be None')
-        if len(job_name) > _JOB_LENGTH_LIMIT:
-            raise ValueError('job_name length is {0}, must be <= {1}',
-                             len(job_name), _JOB_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(job_name, 'job_name')
 
         if not isinstance(job_type, JobType):
-            raise ValueError(f'job_type must be instance of JobType')
+            raise ValueError(f'job_type must be an instance of JobType')
 
         payload = {
             'inputs': input_dataset or [],
@@ -317,28 +235,15 @@ class MarquezClient(object):
         )
 
     def get_job(self, namespace_name, job_name):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-
-        if not job_name:
-            raise ValueError('job_name must not be None')
-        if len(job_name) > _JOB_LENGTH_LIMIT:
-            raise ValueError('job_name length is {0}, must be <= {1}',
-                             len(job_name), _JOB_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(job_name, 'job_name')
 
         return self._get(
             self._url('/namespaces/{0}/jobs/{1}', namespace_name, job_name)
         )
 
     def list_jobs(self, namespace_name, limit=None, offset=None):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
 
         return self._get(
             self._url('/namespaces/{0}/jobs', namespace_name),
@@ -351,17 +256,8 @@ class MarquezClient(object):
     def create_job_run(self, namespace_name, job_name, nominal_start_time=None,
                        nominal_end_time=None, run_args=None,
                        mark_as_running=False):
-        if not namespace_name:
-            raise ValueError('namespace_name must not be None')
-        if len(namespace_name) > _NAMESPACE_LENGTH_LIMIT:
-            raise ValueError('namespace_name length is {0}, must be <= {1}',
-                             len(namespace_name), _NAMESPACE_LENGTH_LIMIT)
-
-        if not job_name:
-            raise ValueError('job_name must not be None')
-        if len(job_name) > _JOB_LENGTH_LIMIT:
-            raise ValueError('job_name length is {0}, must be <= {1}',
-                             len(job_name), _JOB_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(job_name, 'job_name')
 
         payload = {}
 
@@ -387,11 +283,8 @@ class MarquezClient(object):
 
     def list_job_runs(self, namespace_name, job_name, limit=None,
                       offset=None):
-        if not job_name:
-            raise ValueError('job_name must not be None')
-        if len(job_name) > _JOB_LENGTH_LIMIT:
-            raise ValueError('job_name length is {0}, must be <= {1}',
-                             len(job_name), _JOB_LENGTH_LIMIT)
+        self._check_name_length(namespace_name, 'namespace_name')
+        self._check_name_length(job_name, 'job_name')
 
         return self._get(
             self._url(
@@ -405,8 +298,7 @@ class MarquezClient(object):
         )
 
     def get_job_run(self, run_id):
-        if not run_id:
-            raise ValueError('run_id must not be None')
+        self._is_valid_uuid(run_id, 'run_id')
 
         return self._get(self._url('/jobs/runs/{0}', run_id))
 
@@ -432,8 +324,10 @@ class MarquezClient(object):
         )
 
     def _mark_job_run_as(self, run_id, action):
-        if not run_id:
-            raise ValueError('run_id must not be None')
+        self._is_valid_uuid(run_id, 'run_id')
+
+        if not isinstance(action, RunCommands):
+            raise ValueError('action must be an instance of RunCommands')
 
         return self._post(
             self._url('/jobs/runs/{0}/{1}', run_id, action), payload={}
@@ -493,3 +387,29 @@ class MarquezClient(object):
     @staticmethod
     def _to_seconds(timeout_ms):
         return float(timeout_ms) / 1000.0
+
+    @staticmethod
+    def _check_name_length(variable_value, variable_name):
+        if not variable_value:
+            raise ValueError('{0} must not be None', variable_name)
+
+        # ['namespace_name', 'owner_name', 'source_name'] <= 64
+        # ['dataset_name', 'field_name', 'job_name', 'tag_name'] <= 255
+        if variable_name in ['namespace_name', 'owner_name', 'source_name']:
+            if len(variable_value) > 64:
+                raise ValueError('{0} length is {1}, must be <= 64',
+                                 variable_name, len(variable_value))
+        else:
+            if len(variable_value) > 255:
+                raise ValueError('{0} length is {1}, must be <= 255',
+                                 variable_name, len(variable_value))
+
+    @staticmethod
+    def _is_valid_uuid(variable_value, variable_name):
+        if not variable_value:
+            raise ValueError('{0} must not be None', variable_name)
+
+        try:
+            uuid.UUID(str(variable_value))
+        except:
+            raise ValueError('{0} must be a valid UUID', variable_name)
