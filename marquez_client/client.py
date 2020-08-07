@@ -16,7 +16,7 @@ import requests
 import time
 import uuid
 
-from .models import DatasetType, SourceType, JobType, RunCommands, DatasetFieldType
+from .models import DatasetType, SourceType, JobType, RunCommands
 from marquez_client import errors
 from marquez_client import log
 from marquez_client.constants import (
@@ -26,11 +26,11 @@ from marquez_client.version import VERSION
 from six.moves.urllib.parse import quote
 
 _API_PATH = 'api/v1'
-
 _USER_AGENT = f'marquez-python/{VERSION}'
 _HEADERS = {'User-Agent': _USER_AGENT}
 
 
+# Marquez Client
 class MarquezClient(object):
     def __init__(self, enable_ssl=False, host=None, port=None, timeout_ms=None):
         enable_ssl = enable_ssl or os.environ.get('ENABLE_SSL', ENABLE_SSL)
@@ -82,7 +82,7 @@ class MarquezClient(object):
             }
         )
 
-    # Sources API
+    # Source API
     def create_source(self, source_name, source_type, connection_url, description=None):
         MarquezClient._check_name_length(source_name, 'source_name')
         MarquezClient._is_instance_of(source_type, 'source_type', SourceType, 'SourceType')
@@ -200,7 +200,7 @@ class MarquezClient(object):
                       namespace_name, dataset_name, field_name, tag_name)
         )
 
-    # Jobs API
+    # Job API
     def create_job(self, namespace_name, job_name, job_type, location=None, input_dataset=None,
                    output_dataset=None, description=None, context=None):
         MarquezClient._check_name_length(namespace_name, 'namespace_name')
@@ -318,7 +318,7 @@ class MarquezClient(object):
 
     def _mark_job_run_as(self, run_id, action):
         MarquezClient._is_valid_uuid(run_id, 'run_id')
-        MarquezClient._is_instance_of(action, 'action', RunCommands, 'RunCommands'))
+        MarquezClient._is_instance_of(action, 'action', RunCommands, 'RunCommands')
 
         return self._post(
             self._url('/jobs/runs/{0}/{1}', run_id, action), payload={}
