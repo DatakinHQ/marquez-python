@@ -10,8 +10,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ENABLE_SSL = False
-DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT_MS = 10000
 DEFAULT_NAMESPACE_NAME = 'default'
