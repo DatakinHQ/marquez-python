@@ -34,11 +34,11 @@ log = logging.getLogger(__name__)
 # Marquez Client
 class MarquezClientWO(object):
     def __init__(self, url, timeout_ms=None):
-        self._timeout = self._to_seconds(timeout_ms or os.environ.get(
-            'MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS))
+        self._timeout = \
+            self._to_seconds(timeout_ms or os.environ.get
+            ('MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS))
 
         self._api_base = f'{url}{_API_PATH}'
-
         log.debug(self._api_base)
 
     # Namespace API
