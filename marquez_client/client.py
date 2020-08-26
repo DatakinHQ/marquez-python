@@ -19,7 +19,6 @@ import logging
 
 from .models import DatasetType, SourceType, JobType
 from marquez_client import errors
-from marquez_client import log
 from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
 from marquez_client.version import VERSION
 from six.moves.urllib.parse import quote
@@ -29,6 +28,7 @@ _USER_AGENT = f'marquez-python/{VERSION}'
 _HEADERS = {'User-Agent': _USER_AGENT}
 
 log = logging.getLogger(__name__)
+
 
 # Marquez Client
 class MarquezClient(object):
