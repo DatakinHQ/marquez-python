@@ -30,12 +30,12 @@ _HEADERS = {'User-Agent': _USER_AGENT}
 
 log = logging.getLogger(__name__)
 
+
 # Marquez Client
 class MarquezClientWO(object):
     def __init__(self, url, timeout_ms=None):
         self._timeout = self._to_seconds(timeout_ms or os.environ.get(
-            'MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS)
-        )
+            'MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS))
 
         self._api_base = f'{url}{_API_PATH}'
 
@@ -223,9 +223,8 @@ class MarquezClientWO(object):
         encoded_args = [quote(arg.encode('utf-8'), safe='') for arg in args]
         return f'{self._api_base}{path.format(*encoded_args)}'
 
+    @staticmethod
     def _post(self, url, payload, as_json=True):
-        now_ms = self._now_ms()
-
         message = {
             'http_method': 'POST',
             'api_path': url,
@@ -235,9 +234,8 @@ class MarquezClientWO(object):
 
         log.info(message)
 
+    @staticmethod
     def _put(self, url, payload=None, as_json=True):
-        now_ms = self._now_ms()
-
         message = {
             'http_method': 'PUT',
             'api_path': url,

@@ -15,23 +15,10 @@ import marquez_client
 import logging
 import logging.config
 import yaml
-import json
 import mock
-import json
 
 _NAMESPACE = 'default'
 log = logging.getLogger(__name__)
-
-class StructuredMessage:
-    def __init__(self, message, /, **kwargs):
-        self.message = message
-        self.kwargs = kwargs
-
-    def __str__(self):
-        return '%s >>> %s' % (self.message, json.dumps(self.kwargs))
-
-
-_ = StructuredMessage   # optional, to improve readability
 
 
 class TestAirflowDAG(unittest.TestCase):
