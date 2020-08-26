@@ -15,40 +15,29 @@ import os
 import requests
 import time
 import uuid
+import logging
 
 from .models import DatasetType, SourceType, JobType
 from marquez_client import errors
 from marquez_client import log
-from marquez_client.constants import (
-    ENABLE_SSL, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_TIMEOUT_MS
-)
+from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
 from marquez_client.version import VERSION
 from six.moves.urllib.parse import quote
 
-_API_PATH = 'api/v1'
+_API_PATH = '/api/v1'
 _USER_AGENT = f'marquez-python/{VERSION}'
 _HEADERS = {'User-Agent': _USER_AGENT}
 
+log = logging.getLogger(__name__)
 
 # Marquez Client
 class MarquezClient(object):
-    def __init__(self, enable_ssl=False, host=None, port=None,
-                 timeout_ms=None):
-        enable_ssl = enable_ssl or os.environ.get('ENABLE_SSL', ENABLE_SSL)
-        host = host or os.environ.get('MARQUEZ_HOST', DEFAULT_HOST)
-        port = port or os.environ.get('MARQUEZ_PORT', DEFAULT_PORT)
+    def __init__(self, url, timeout_ms=None):
         self._timeout = self._to_seconds(timeout_ms or os.environ.get(
             'MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS)
         )
 
-        protocol = 'http'
-        if enable_ssl:
-            protocol = 'https'
-
-        self._api_base = f'{protocol}://{host}:{port}/{_API_PATH}'
-
-        if not port or port == 80:
-            self._api_base = f'{protocol}://{host}/{_API_PATH}'
+        self._api_base = f'{url}{_API_PATH}'
 
         log.debug(self._api_base)
 

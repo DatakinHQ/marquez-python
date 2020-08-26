@@ -13,7 +13,7 @@ _NAMESPACE = "my-namespace"
 
 class TestMarquezClient(unittest.TestCase):
     def setUp(self):
-        self.client = MarquezClient()
+        self.client = MarquezClient("http://localhost:5000")
 
     @mock.patch("marquez_client.MarquezClient._put")
     def test_create_namespace(self, mock_put):
