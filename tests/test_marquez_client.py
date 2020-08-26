@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 class TestMarquezClient(unittest.TestCase):
     def setUp(self):
-        log.debug("TestMarquezClientWO.setup(): ")
+        log.debug("TestMarquezClient.setup(): ")
 
         with open('tests/logConfig.yaml', 'rt') as file:
             yamlConfig = yaml.safe_load(file.read())
