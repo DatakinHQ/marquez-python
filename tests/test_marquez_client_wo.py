@@ -36,9 +36,9 @@ class TestMarquezClientWO(unittest.TestCase):
             logging.config.dictConfig(yamlConfig)
             log.info("loaded logConfig.yaml")
 
-        self.client_wo = marquez_client.MarquezClientWO("http://localhost:5000")
+        self.client_wo = \
+            marquez_client.MarquezClientWO("http://localhost:5000")
         log.info("created marquez_client_wo.")
-
 
     @mock.patch("marquez_client.MarquezClientWO._put")
     def test_create_namespace(self, mock_put):
