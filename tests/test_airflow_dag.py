@@ -37,9 +37,9 @@ class TestAirflowDAG(unittest.TestCase):
             logging.config.dictConfig(yamlConfig)
             log.info("loaded logConfig.yaml")
 
-        backend = os.environ.get('MARQUEZ_BACKEND', MARQUEZ_BACKEND)
+        # backend = os.environ.get('MARQUEZ_BACKEND', MARQUEZ_BACKEND)
 
-        self.client = marquez_client.MarquezClientWO("");
+        self.client = marquez_client.MarquezClientWO("")
         log.info("created marquez_client.")
 
     def test_create_dag(self):

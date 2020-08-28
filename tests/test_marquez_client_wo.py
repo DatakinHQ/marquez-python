@@ -136,8 +136,8 @@ class TestMarquezClientWO(unittest.TestCase):
             "emailOnRetry": "true",
             "retries": "1"
         }
-        created_at = str(generate(datetime.datetime.utcnow()
-                                  .replace(tzinfo=pytz.utc)))
+        # created_at = str(generate(datetime.datetime.utcnow()
+        #                          .replace(tzinfo=pytz.utc)))
 
         self.client_wo.create_job_run(
             namespace_name=_NAMESPACE,
