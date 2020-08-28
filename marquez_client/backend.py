@@ -21,39 +21,3 @@ class Backend:
 
     def post(self, path, headers, json=None):
         pass
-
-"""'''
-
-c = Clients.createMarquezWOClient(Backend, config)
-c.createNamespace()
-c.createRun()
-
-MarquezWO(BackendHttp, config)
-def create_namespace(params from config):
-    valid parms
-    backend.put()
-
-def create_source(params from config):
-    valid parms
-    backend.put()
-
-@staticmethod
-def put():
-    dfsdfksjfl
-
-    http.put()
-    .,klsdfslfkj
-
-
-MarquezWO(BackendFile, config)
-def create_namespace(params from config):
-    valid parms
-    backend.write()
-
-
-MarquezWO(BackendKafka, config)
-def create_namespace(params from config):
-    valid parms
-    backend.publish()
-
-'''"""

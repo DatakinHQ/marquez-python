@@ -16,6 +16,7 @@ import os
 
 from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
 from marquez_client.backend import Backend
+from marquez_client import errors
 
 log = logging.getLogger(__name__)
 
