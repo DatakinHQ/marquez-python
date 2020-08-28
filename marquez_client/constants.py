@@ -12,4 +12,6 @@
 
 DEFAULT_TIMEOUT_MS = 10000
 DEFAULT_NAMESPACE_NAME = 'default'
-MARQUEZ_BACKEND = 'http'
+DEFAULT_MARQUEZ_BACKEND = 'file'
+DEFAULT_MARQUEZ_URL = 'http://localhost:5000'
+DEFAULT_MARQUEZ_FILE = '/tmp/marquez-airflow-requests.file'

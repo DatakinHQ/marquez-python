@@ -30,13 +30,10 @@ _HEADERS = {'User-Agent': _USER_AGENT}
 log = logging.getLogger(__name__)
 
 
-# Marquez Client WO
-class MarquezClientWO(object):
-    def __init__(self, url, timeout_ms=None):
-        self._timeout = self._to_seconds(
-            timeout_ms or os.environ.get
-            ('MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS))
-
+# Marquez Write Only Client
+class MarquezWriteOnlyClient(object):
+    def __init__(self, backend):
+        self._backend = backend
         self._api_base = _API_PATH
         log.debug(self._api_base)
 
@@ -44,8 +41,9 @@ class MarquezClientWO(object):
     def create_namespace(self, namespace_name, owner_name, description=None):
         log.debug("create_namespace()")
 
-        MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
-        MarquezClientWO._check_name_length(owner_name, 'owner_name')
+        MarquezWriteOnlyClient.\
+            _check_name_length(namespace_name, 'namespace_name')
+        MarquezWriteOnlyClient._check_name_length(owner_name, 'owner_name')
 
         payload = {
             'ownerName': owner_name
@@ -54,9 +52,10 @@ class MarquezClientWO(object):
         if description:
             payload['description'] = description
 
-        return self._put(
+        return self._backend.put(
             self._url('/namespaces/{0}', namespace_name),
-            payload=payload
+            headers=_HEADERS,
+            json=payload
         )
 
     # Source API
@@ -64,10 +63,10 @@ class MarquezClientWO(object):
                       description=None):
         log.debug("create_source()")
 
-        MarquezClientWO._check_name_length(source_name, 'source_name')
-        MarquezClientWO._is_instance_of(source_type, SourceType)
+        MarquezWriteOnlyClient._check_name_length(source_name, 'source_name')
+        MarquezWriteOnlyClient._is_instance_of(source_type, SourceType)
 
-        MarquezClientWO._is_valid_connection_url(connection_url)
+        MarquezWriteOnlyClient._is_valid_connection_url(connection_url)
 
         payload = {
             'type': source_type.value,
@@ -77,8 +76,10 @@ class MarquezClientWO(object):
         if description:
             payload['description'] = description
 
-        return self._put(self._url('/sources/{0}', source_name),
-                         payload=payload)
+        return self._backend.put(
+            self._url('/sources/{0}', source_name),
+            headers=_HEADERS,
+            json=payload)
 
     # Datasets API
     def create_dataset(self, namespace_name, dataset_name, dataset_type,
@@ -87,16 +88,20 @@ class MarquezClientWO(object):
                        fields=None, tags=None):
         log.debug("create_dataset()")
 
-        MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
-        MarquezClientWO._check_name_length(dataset_name, 'dataset_name')
-        MarquezClientWO._is_instance_of(dataset_type, DatasetType)
+        MarquezWriteOnlyClient.\
+            _check_name_length(namespace_name, 'namespace_name')
+        MarquezWriteOnlyClient.\
+            _check_name_length(dataset_name, 'dataset_name')
+        MarquezWriteOnlyClient._is_instance_of(dataset_type, DatasetType)
 
         if dataset_type == DatasetType.STREAM:
-            MarquezClientWO._is_none(schema_location, 'schema_location')
+            MarquezWriteOnlyClient.\
+                _is_none(schema_location, 'schema_location')
 
-        MarquezClientWO._is_none(run_id, 'run_id')
-        MarquezClientWO._check_name_length(physical_name, 'physical_name')
-        MarquezClientWO._check_name_length(source_name, 'source_name')
+        MarquezWriteOnlyClient._is_none(run_id, 'run_id')
+        MarquezWriteOnlyClient.\
+            _check_name_length(physical_name, 'physical_name')
+        MarquezWriteOnlyClient._check_name_length(source_name, 'source_name')
 
         payload = {
             'type': dataset_type.value,
@@ -117,38 +122,11 @@ class MarquezClientWO(object):
         if schema_location:
             payload['schemaLocation'] = schema_location
 
-        return self._put(
+        return self._backend.put(
             self._url('/namespaces/{0}/datasets/{1}', namespace_name,
                       dataset_name),
-            payload=payload
-        )
-
-    def tag_dataset(self, namespace_name, dataset_name, tag_name):
-        log.debug("tag_dataset()")
-
-        MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
-        MarquezClientWO._check_name_length(dataset_name, 'dataset_name')
-
-        if not tag_name:
-            raise ValueError('tag_name must not be None')
-
-        return self._post(
-            self._url('/namespaces/{0}/datasets/{1}/tags/{2}',
-                      namespace_name, dataset_name, tag_name)
-        )
-
-    def tag_dataset_field(self, namespace_name, dataset_name, field_name,
-                          tag_name):
-        log.debug("tag_dataset_field()")
-
-        MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
-        MarquezClientWO._check_name_length(dataset_name, 'dataset_name')
-        MarquezClientWO._check_name_length(field_name, 'field_name')
-        MarquezClientWO._check_name_length(tag_name, 'tag_name')
-
-        return self._post(
-            self._url('/namespaces/{0}/datasets/{1}/fields/{2}/tags/{3}',
-                      namespace_name, dataset_name, field_name, tag_name)
+            headers=_HEADERS,
+            json=payload
         )
 
     # Job API
@@ -157,9 +135,10 @@ class MarquezClientWO(object):
                    output_dataset=None, description=None, context=None):
         log.debug("create_job()")
 
-        MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
-        MarquezClientWO._check_name_length(job_name, 'job_name')
-        MarquezClientWO._is_instance_of(job_type, JobType)
+        MarquezWriteOnlyClient.\
+            _check_name_length(namespace_name, 'namespace_name')
+        MarquezWriteOnlyClient._check_name_length(job_name, 'job_name')
+        MarquezWriteOnlyClient._is_instance_of(job_type, JobType)
 
         payload = {
             'inputs': input_dataset or [],
@@ -176,9 +155,10 @@ class MarquezClientWO(object):
         if description:
             payload['description'] = description
 
-        return self._put(
+        return self._backend.put(
             self._url('/namespaces/{0}/jobs/{1}', namespace_name, job_name),
-            payload=payload
+            headers=_HEADERS,
+            json=payload
         )
 
     def create_job_run(self, namespace_name, job_name, run_id,
@@ -187,8 +167,9 @@ class MarquezClientWO(object):
                        mark_as_running=False):
         log.debug("create_job_run()")
 
-        MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
-        MarquezClientWO._check_name_length(job_name, 'job_name')
+        MarquezWriteOnlyClient.\
+            _check_name_length(namespace_name, 'namespace_name')
+        MarquezWriteOnlyClient._check_name_length(job_name, 'job_name')
 
         payload = {}
 
@@ -203,10 +184,11 @@ class MarquezClientWO(object):
         if run_args:
             payload['runArgs'] = run_args
 
-        response = self._post(
+        response = self._backend.post(
             self._url('/namespaces/{0}/jobs/{1}/runs',
                       namespace_name, job_name),
-            payload=payload)
+            headers=_HEADERS,
+            json=payload)
 
         if mark_as_running:
             response = self.mark_job_run_as_started(run_id)
@@ -236,10 +218,12 @@ class MarquezClientWO(object):
     def __mark_job_run_as(self, run_id, action):
         log.debug("__mark_job_run_as()")
 
-        MarquezClientWO._is_valid_uuid(run_id, 'run_id')
+        MarquezWriteOnlyClient._is_valid_uuid(run_id, 'run_id')
 
-        return self._post(
-            self._url('/jobs/runs/{0}/{1}', run_id, action), payload={}
+        return self._backend.post(
+            self._url('/jobs/runs/{0}/{1}', run_id, action),
+            headers=_HEADERS,
+            json={}
         )
 
     # Common
@@ -247,6 +231,51 @@ class MarquezClientWO(object):
         encoded_args = [quote(arg.encode('utf-8'), safe='') for arg in args]
         return f'{self._api_base}{path.format(*encoded_args)}'
 
+    @staticmethod
+    def _now_ms():
+        return int(round(time.time() * 1000))
+
+    @staticmethod
+    def _is_none(variable_value, variable_name):
+        if not variable_value:
+            raise ValueError(f"{variable_name} must not be None")
+
+    @staticmethod
+    def _check_name_length(variable_value, variable_name):
+        MarquezWriteOnlyClient._is_none(variable_value, variable_name)
+
+        # ['namespace_name', 'owner_name', 'source_name'] <= 64
+        # ['dataset_name', 'field_name', 'job_name', 'tag_name'] <= 255
+        if variable_name in ['namespace_name', 'owner_name', 'source_name']:
+            if len(variable_value) > 64:
+                raise ValueError(f"{variable_name} length is"
+                                 f" {len(variable_value)}, must be <= 64")
+        else:
+            if len(variable_value) > 255:
+                raise ValueError(f"{variable_name} length is"
+                                 f" {len(variable_value)}, must be <= 255")
+
+    @staticmethod
+    def _is_valid_uuid(variable_value, variable_name):
+        MarquezWriteOnlyClient._is_none(variable_value, variable_name)
+
+        try:
+            uuid.UUID(str(variable_value))
+        except ValueError:
+            raise ValueError(f"{variable_name} must be a valid UUID")
+
+    @staticmethod
+    def _is_instance_of(variable_value, variable_enum_type):
+        if not isinstance(variable_value, variable_enum_type):
+            raise ValueError(f"{variable_value} must be an instance"
+                             f" of {variable_enum_type}")
+
+    @staticmethod
+    def _is_valid_connection_url(connection_url):
+        MarquezWriteOnlyClient._is_none(connection_url, 'connection_url')
+
+
+'''
     def _post(self, url, payload, as_json=True):
         log.debug("_post()")
 
@@ -270,62 +299,4 @@ class MarquezClientWO(object):
         put_details['payload'] = payload
 
         log.info(put_details)
-
-    @staticmethod
-    def _now_ms():
-        return int(round(time.time() * 1000))
-
-    def _response(self, response, as_json):
-        try:
-            response.raise_for_status()
-        except requests.exceptions.HTTPError as e:
-            self._raise_api_error(e)
-
-        return response.json() if as_json else response.text
-
-    def _raise_api_error(self, e):
-        # TODO: https://github.com/MarquezProject/marquez-python/issues/55
-        raise errors.APIError() from e
-
-    @staticmethod
-    def _to_seconds(timeout_ms):
-        return float(timeout_ms) / 1000.0
-
-    @staticmethod
-    def _is_none(variable_value, variable_name):
-        if not variable_value:
-            raise ValueError(f"{variable_name} must not be None")
-
-    @staticmethod
-    def _check_name_length(variable_value, variable_name):
-        MarquezClientWO._is_none(variable_value, variable_name)
-
-        # ['namespace_name', 'owner_name', 'source_name'] <= 64
-        # ['dataset_name', 'field_name', 'job_name', 'tag_name'] <= 255
-        if variable_name in ['namespace_name', 'owner_name', 'source_name']:
-            if len(variable_value) > 64:
-                raise ValueError(f"{variable_name} length is"
-                                 f" {len(variable_value)}, must be <= 64")
-        else:
-            if len(variable_value) > 255:
-                raise ValueError(f"{variable_name} length is"
-                                 f" {len(variable_value)}, must be <= 255")
-
-    @staticmethod
-    def _is_valid_uuid(variable_value, variable_name):
-        MarquezClientWO._is_none(variable_value, variable_name)
-
-        try:
-            uuid.UUID(str(variable_value))
-        except ValueError:
-            raise ValueError(f"{variable_name} must be a valid UUID")
-
-    @staticmethod
-    def _is_instance_of(variable_value, variable_enum_type):
-        if not isinstance(variable_value, variable_enum_type):
-            raise ValueError(f"{variable_value} must be an instance"
-                             f" of {variable_enum_type}")
-
-    @staticmethod
-    def _is_valid_connection_url(connection_url):
-        MarquezClientWO._is_none(connection_url, 'connection_url')
+'''

@@ -11,4 +11,4 @@
 # limitations under the License.
 
 from marquez_client.client import MarquezClient
-from marquez_client.client_wo import MarquezClientWO
+from marquez_client.client_wo import MarquezWriteOnlyClient

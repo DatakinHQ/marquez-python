@@ -11,7 +11,6 @@
 # limitations under the License.
 
 import unittest
-import marquez_client
 import logging
 import logging.config
 import yaml
@@ -20,8 +19,8 @@ import os
 import uuid
 import random
 
-from marquez_client.constants import (MARQUEZ_BACKEND)
 from marquez_client.models import (SourceType, DatasetType, JobType)
+from marquez_client.clients import Clients
 
 _NAMESPACE = 'default'
 
@@ -39,7 +38,7 @@ class TestAirflowDAG(unittest.TestCase):
 
         # backend = os.environ.get('MARQUEZ_BACKEND', MARQUEZ_BACKEND)
 
-        self.client = marquez_client.MarquezClientWO("")
+        self.client = Clients.new_write_only_client()
         log.info("created marquez_client.")
 
     def test_create_dag(self):

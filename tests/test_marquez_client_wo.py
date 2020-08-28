@@ -14,6 +14,8 @@ import unittest
 
 import marquez_client
 from marquez_client.models import DatasetType, SourceType, JobType, RunState
+from marquez_client.clients import Clients
+
 import mock
 import uuid
 import pytz
@@ -27,17 +29,16 @@ _NAMESPACE = "my-namespace"
 log = logging.getLogger(__name__)
 
 
-class TestMarquezClientWO(unittest.TestCase):
+class TestMarquezWriteOnlyClient(unittest.TestCase):
     def setUp(self):
-        log.debug("TestMarquezClientWO.setup(): ")
+        log.debug("MarquezWriteOnlyClient.setup(): ")
 
         with open('tests/logConfig.yaml', 'rt') as file:
             yamlConfig = yaml.safe_load(file.read())
             logging.config.dictConfig(yamlConfig)
             log.info("loaded logConfig.yaml")
 
-        self.client_wo = \
-            marquez_client.client_wo.MarquezClientWO("http://localhost:5000")
+        self.client_wo = Clients.new_write_only_client()
         log.info("created marquez_client_wo.")
 
     def test_create_namespace(self):

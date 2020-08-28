@@ -58,6 +58,30 @@ class TestMarquezClient(unittest.TestCase):
         assert owner_name == str(response['ownerName'])
         assert description == str(response['description'])
 
+    @mock.patch("marquez_client.client.MarquezClient._get")
+    def test_get_namespace(self, mock_get):
+        mock_get.return_value = {
+            "name": _NAMESPACE
+        }
+
+        response = self.client.get_namespace(_NAMESPACE)
+
+        assert _NAMESPACE == str(response['name'])
+
+    @mock.patch("marquez_client.client.MarquezClient._get")
+    def test_list_namespace(self, mock_get):
+        mock_get.return_value = {
+            "namespaces": [
+                {
+                    "name": _NAMESPACE,
+                }
+            ]
+        }
+
+        response = self.client.list_namespaces(limit=10, offset=0)
+
+        assert _NAMESPACE == str(response['namespaces'][0]['name'])
+
     @mock.patch("marquez_client.client.MarquezClient._put")
     def test_create_dataset(self, mock_put):
         dataset_name = "my-dataset"
@@ -129,6 +153,24 @@ class TestMarquezClient(unittest.TestCase):
         )
 
         assert str(response['description']) == description
+        assert str(response['name']) == dataset_name
+
+    @mock.patch("marquez_client.client.MarquezClient._get")
+    def test_get_dataset(self, mock_get):
+        dataset_name = "my-dataset"
+
+        mock_get.return_value = {
+            'id': {
+                'namespace': 'my-namespace',
+                'name': 'my-dataset'
+            },
+            'name': 'my-dataset',
+        }
+
+        response = self.client.get_dataset(
+            namespace_name=_NAMESPACE,
+            dataset_name=dataset_name)
+
         assert str(response['name']) == dataset_name
 
     @mock.patch("marquez_client.client.MarquezClient._put")
