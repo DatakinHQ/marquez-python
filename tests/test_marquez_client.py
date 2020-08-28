@@ -226,6 +226,8 @@ class TestMarquezClient(unittest.TestCase):
 
     @mock.patch("marquez_client.client.MarquezClient._post")
     def test_create_job_run(self, mock_post):
+        run_id = str(uuid.uuid4())
+
         job_name = "my-job"
         run_args = {
             "email": "me@mycorp.com",
@@ -237,7 +239,7 @@ class TestMarquezClient(unittest.TestCase):
                                   .replace(tzinfo=pytz.utc)))
 
         mock_post.return_value = {
-            'id': f'{uuid.uuid4()}',
+            'id': f'{run_id}',
             'createdAt': f'{created_at}',
             'updatedAt': '2020-08-12T22:33:02.787228Z',
             'nominalStartTime': None,
@@ -257,6 +259,7 @@ class TestMarquezClient(unittest.TestCase):
         response = self.client.create_job_run(
             namespace_name=_NAMESPACE,
             job_name=job_name,
+            run_id=run_id,
             nominal_start_time=None,
             nominal_end_time=None,
             run_args=run_args,

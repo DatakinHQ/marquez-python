@@ -248,6 +248,8 @@ class MarquezClient(object):
 
         payload = {}
 
+        payload['id'] = run_id
+
         if nominal_start_time:
             payload['nominalStartTime'] = nominal_start_time
 
@@ -258,8 +260,8 @@ class MarquezClient(object):
             payload['runArgs'] = run_args
 
         response = self._post(
-            self._url('/namespaces/{0}/jobs/{1}/runs?external_id={2}',
-                      namespace_name, job_name, run_id),
+            self._url('/namespaces/{0}/jobs/{1}/runs',
+                      namespace_name, job_name),
             payload=payload)
 
         if mark_as_running:
