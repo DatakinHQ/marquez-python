@@ -16,7 +16,6 @@ import requests
 import time
 import uuid
 import logging
-import logging.config
 
 from .models import DatasetType, SourceType, JobType
 from marquez_client import errors
@@ -31,18 +30,20 @@ _HEADERS = {'User-Agent': _USER_AGENT}
 log = logging.getLogger(__name__)
 
 
-# Marquez Client
+# Marquez Client WO
 class MarquezClientWO(object):
     def __init__(self, url, timeout_ms=None):
         self._timeout = self._to_seconds(
             timeout_ms or os.environ.get
             ('MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS))
 
-        self._api_base = f'{url}{_API_PATH}'
+        self._api_base = _API_PATH
         log.debug(self._api_base)
 
     # Namespace API
     def create_namespace(self, namespace_name, owner_name, description=None):
+        log.debug("create_namespace()")
+
         MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
         MarquezClientWO._check_name_length(owner_name, 'owner_name')
 
@@ -61,6 +62,8 @@ class MarquezClientWO(object):
     # Source API
     def create_source(self, source_name, source_type, connection_url,
                       description=None):
+        log.debug("create_source()")
+
         MarquezClientWO._check_name_length(source_name, 'source_name')
         MarquezClientWO._is_instance_of(source_type, SourceType)
 
@@ -82,6 +85,8 @@ class MarquezClientWO(object):
                        physical_name, source_name, run_id,
                        description=None, schema_location=None,
                        fields=None, tags=None):
+        log.debug("create_dataset()")
+
         MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
         MarquezClientWO._check_name_length(dataset_name, 'dataset_name')
         MarquezClientWO._is_instance_of(dataset_type, DatasetType)
@@ -119,6 +124,8 @@ class MarquezClientWO(object):
         )
 
     def tag_dataset(self, namespace_name, dataset_name, tag_name):
+        log.debug("tag_dataset()")
+
         MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
         MarquezClientWO._check_name_length(dataset_name, 'dataset_name')
 
@@ -132,6 +139,8 @@ class MarquezClientWO(object):
 
     def tag_dataset_field(self, namespace_name, dataset_name, field_name,
                           tag_name):
+        log.debug("tag_dataset_field()")
+
         MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
         MarquezClientWO._check_name_length(dataset_name, 'dataset_name')
         MarquezClientWO._check_name_length(field_name, 'field_name')
@@ -146,6 +155,8 @@ class MarquezClientWO(object):
     def create_job(self, namespace_name, job_name, job_type,
                    location=None, input_dataset=None,
                    output_dataset=None, description=None, context=None):
+        log.debug("create_job()")
+
         MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
         MarquezClientWO._check_name_length(job_name, 'job_name')
         MarquezClientWO._is_instance_of(job_type, JobType)
@@ -174,6 +185,8 @@ class MarquezClientWO(object):
                        nominal_start_time=None,
                        nominal_end_time=None, run_args=None,
                        mark_as_running=False):
+        log.debug("create_job_run()")
+
         MarquezClientWO._check_name_length(namespace_name, 'namespace_name')
         MarquezClientWO._check_name_length(job_name, 'job_name')
 
@@ -189,29 +202,38 @@ class MarquezClientWO(object):
             payload['runArgs'] = run_args
 
         response = self._post(
-            self._url('/namespaces/{0}/jobs/{1}/runs',
-                      namespace_name, job_name),
+            self._url('/namespaces/{0}/jobs/{1}/runs?external_id={2}',
+                      namespace_name, job_name, run_id),
             payload=payload)
 
         if mark_as_running:
-            run_id = response['runId']
             response = self.mark_job_run_as_started(run_id)
 
         return response
 
     def mark_job_run_as_started(self, run_id):
+        log.debug("mark_job_run_as_started()")
+
         return self.__mark_job_run_as(run_id, 'start')
 
     def mark_job_run_as_completed(self, run_id):
+        log.debug("mark_job_run_as_completed()")
+
         return self.__mark_job_run_as(run_id, 'complete')
 
     def mark_job_run_as_failed(self, run_id):
+        log.debug("mark_job_run_as_failed()")
+
         return self.__mark_job_run_as(run_id, 'fail')
 
     def mark_job_run_as_aborted(self, run_id):
+        log.debug("mark_job_run_as_aborted()")
+
         return self.__mark_job_run_as(run_id, 'abort')
 
     def __mark_job_run_as(self, run_id, action):
+        log.debug("__mark_job_run_as()")
+
         MarquezClientWO._is_valid_uuid(run_id, 'run_id')
 
         return self._post(
@@ -223,27 +245,29 @@ class MarquezClientWO(object):
         encoded_args = [quote(arg.encode('utf-8'), safe='') for arg in args]
         return f'{self._api_base}{path.format(*encoded_args)}'
 
-    @staticmethod
     def _post(self, url, payload, as_json=True):
-        message = {
-            'http_method': 'POST',
-            'api_path': url,
-            'payload': payload,
-            'headers': [_HEADERS]
-        }
+        log.debug("_post()")
 
-        log.info(message)
+        post_details = {}
 
-    @staticmethod
+        post_details['method'] = 'POST'
+        post_details['path'] = url
+        post_details['headers'] = _HEADERS
+        post_details['payload'] = payload
+
+        log.info(post_details)
+
     def _put(self, url, payload=None, as_json=True):
-        message = {
-            'http_method': 'PUT',
-            'api_path': url,
-            'payload': payload,
-            'headers': [_HEADERS]
-        }
+        log.debug("_put()")
 
-        log.info(message)
+        put_details = {}
+
+        put_details['method'] = 'PUT'
+        put_details['path'] = url
+        put_details['headers'] = _HEADERS
+        put_details['payload'] = payload
+
+        log.info(put_details)
 
     @staticmethod
     def _now_ms():

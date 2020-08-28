@@ -16,7 +16,6 @@ import requests
 import time
 import uuid
 import logging
-import logging.config
 
 from .models import DatasetType, SourceType, JobType
 from marquez_client import errors
@@ -240,7 +239,7 @@ class MarquezClient(object):
             }
         )
 
-    def create_job_run(self, namespace_name, job_name,
+    def create_job_run(self, namespace_name, job_name, run_id,
                        nominal_start_time=None,
                        nominal_end_time=None, run_args=None,
                        mark_as_running=False):
@@ -259,12 +258,11 @@ class MarquezClient(object):
             payload['runArgs'] = run_args
 
         response = self._post(
-            self._url('/namespaces/{0}/jobs/{1}/runs',
-                      namespace_name, job_name),
+            self._url('/namespaces/{0}/jobs/{1}/runs?external_id={2}',
+                      namespace_name, job_name, run_id),
             payload=payload)
 
         if mark_as_running:
-            run_id = response['runId']
             response = self.mark_job_run_as_started(run_id)
 
         return response
@@ -328,8 +326,15 @@ class MarquezClient(object):
 
         response = requests.post(
             url=url, headers=_HEADERS, json=payload, timeout=self._timeout)
-        log.info(f'{url}', method='POST', payload=json.dumps(
-            payload), duration_ms=(self._now_ms() - now_ms))
+
+        post_details = {}
+        post_details['url'] = url
+        post_details['http_method'] = 'POST'
+        post_details['http_headers'] = _HEADERS
+        post_details['payload'] = payload
+        post_details['duration_ms'] = (self._now_ms() - now_ms)
+
+        log.info(post_details)
 
         return self._response(response, as_json)
 
@@ -338,8 +343,15 @@ class MarquezClient(object):
 
         response = requests.put(
             url=url, headers=_HEADERS, json=payload, timeout=self._timeout)
-        log.info(f'{url}', method='PUT', payload=json.dumps(
-            payload), duration_ms=(self._now_ms() - now_ms))
+
+        put_details = {}
+        put_details['url'] = url
+        put_details['http_method'] = 'POST'
+        put_details['http_headers'] = _HEADERS
+        put_details['payload'] = payload
+        put_details['duration_ms'] = (self._now_ms() - now_ms)
+
+        log.info(put_details)
 
         return self._response(response, as_json)
 
@@ -348,8 +360,15 @@ class MarquezClient(object):
 
         response = requests.get(
             url, params=params, headers=_HEADERS, timeout=self._timeout)
-        log.info(f'{url}', method='GET',
-                 duration_ms=(self._now_ms() - now_ms))
+
+        get_details = {}
+        get_details['url'] = url
+        get_details['http_method'] = 'POST'
+        get_details['http_headers'] = _HEADERS
+        get_details['payload'] = params
+        get_details['duration_ms'] = (self._now_ms() - now_ms)
+
+        log.info(get_details)
 
         return self._response(response, as_json)
 

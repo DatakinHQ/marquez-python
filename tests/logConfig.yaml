@@ -13,14 +13,12 @@
 version: 1
 disable_existing_loggers: true
 
-
 formatters:
   standard:
     format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   error:
     format: "%(levelname)s <PID %(process)d:%(processName)s> %(name)s.%(funcName)s(): %(message)s"
   json:
-    format: "%(message)s"
     class: pythonjsonlogger.jsonlogger.JsonFormatter
 
 handlers:
@@ -35,13 +33,13 @@ handlers:
     level: INFO
     formatter: standard
     filename: /tmp/marquez-airflow.log
-    maxBytes: 1024
+    maxBytes: 2048
     backupCount: 10
     encoding: utf8
 
   requests_file_handler:
     class: logging.handlers.TimedRotatingFileHandler
-    level: DEBUG
+    level: INFO
     formatter: json
     filename: /tmp/marquez-airflow-requests.log
     when: 'midnight'
@@ -55,11 +53,11 @@ root:
   propogate: yes
 
 loggers:
-  marquez_client.MarquezClient:
-    level: DEBUG
+  marquez_client.client:
+    level: INFO
     handlers: [info_file_handler]
     propogate: yes
-  marquez_client.MarquezClientWO:
-    level: DEBUG
+  marquez_client.client_wo:
+    level: INFO
     handlers: [requests_file_handler]
     propogate: yes

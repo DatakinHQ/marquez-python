@@ -36,10 +36,11 @@ class TestMarquezClient(unittest.TestCase):
             logging.config.dictConfig(yamlConfig)
             log.info("loaded logConfig.yaml")
 
-        self.client = marquez_client.MarquezClient("http://localhost:5000")
+        self.client = \
+            marquez_client.client.MarquezClient("http://localhost:5000")
         log.info("created marquez_client.")
 
-    @mock.patch("marquez_client.MarquezClient._put")
+    @mock.patch("marquez_client.client.MarquezClient._put")
     def test_create_namespace(self, mock_put):
         owner_name = "me"
         description = "my namespace for testing."
@@ -57,7 +58,7 @@ class TestMarquezClient(unittest.TestCase):
         assert owner_name == str(response['ownerName'])
         assert description == str(response['description'])
 
-    @mock.patch("marquez_client.MarquezClient._put")
+    @mock.patch("marquez_client.client.MarquezClient._put")
     def test_create_dataset(self, mock_put):
         dataset_name = "my-dataset"
         description = "My dataset for testing."
@@ -130,7 +131,7 @@ class TestMarquezClient(unittest.TestCase):
         assert str(response['description']) == description
         assert str(response['name']) == dataset_name
 
-    @mock.patch("marquez_client.MarquezClient._put")
+    @mock.patch("marquez_client.client.MarquezClient._put")
     def test_create_datasource(self, mock_put):
         source_name = "flight_schedules_db"
         source_type = SourceType.POSTGRESQL
@@ -158,7 +159,7 @@ class TestMarquezClient(unittest.TestCase):
         assert response['connectionUrl'] == source_url
         assert response['type'] == source_type.value
 
-    @mock.patch("marquez_client.MarquezClient._put")
+    @mock.patch("marquez_client.client.MarquezClient._put")
     def test_create_job(self, mock_put):
         job_name = "my-job"
         input_dataset = [
@@ -223,7 +224,7 @@ class TestMarquezClient(unittest.TestCase):
         assert str(response['id']) is not None
         assert str(response['location']) == location
 
-    @mock.patch("marquez_client.MarquezClient._post")
+    @mock.patch("marquez_client.client.MarquezClient._post")
     def test_create_job_run(self, mock_post):
         job_name = "my-job"
         run_args = {
@@ -266,7 +267,7 @@ class TestMarquezClient(unittest.TestCase):
         assert str(response['run_args']) == str(run_args)
         assert str(response['createdAt']) == created_at
 
-    @mock.patch("marquez_client.MarquezClient._post")
+    @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_start(self, mock_post):
         run_id = str(uuid.uuid4())
 
@@ -288,7 +289,7 @@ class TestMarquezClient(unittest.TestCase):
         assert str(response['id']) == run_id
         assert str(response['state']) == RunState.RUNNING.value
 
-    @mock.patch("marquez_client.MarquezClient._post")
+    @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_completed(self, mock_post):
         run_id = str(uuid.uuid4())
 
@@ -310,7 +311,7 @@ class TestMarquezClient(unittest.TestCase):
         assert str(response['id']) == run_id
         assert str(response['state']) == RunState.COMPLETED.value
 
-    @mock.patch("marquez_client.MarquezClient._post")
+    @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_failed(self, mock_post):
         run_id = str(uuid.uuid4())
 
@@ -332,7 +333,7 @@ class TestMarquezClient(unittest.TestCase):
         assert str(response['id']) == run_id
         assert str(response['state']) == RunState.FAILED.value
 
-    @mock.patch("marquez_client.MarquezClient._post")
+    @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_aborted(self, mock_post):
         run_id = str(uuid.uuid4())
 
