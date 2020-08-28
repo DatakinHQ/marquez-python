@@ -30,7 +30,7 @@ class Clients(object):
 
     @staticmethod
     def new_client():
-        url = os.environ.get('MARQUEZ_URL')
+        url = os.environ.get('MARQUEZ_URL', DEFAULT_MARQUEZ_URL)
         return marquez_client.MarquezClient(url)
 
     @staticmethod
@@ -42,10 +42,7 @@ class Clients(object):
         backend_env = \
             os.environ.get('MARQUEZ_BACKEND', DEFAULT_MARQUEZ_BACKEND)
 
-        if not backend_env:
-            log.error("Define a Backend!")
-            return
-        elif backend_env == 'http':
+        if backend_env == 'http':
             url = os.environ.get('MARQUEZ_URL', DEFAULT_MARQUEZ_URL)
             return HttpBackend(url)
         elif backend_env == 'file':

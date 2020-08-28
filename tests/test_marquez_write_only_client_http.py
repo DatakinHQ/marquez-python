@@ -12,24 +12,21 @@
 
 import unittest
 
-import marquez_client
 from marquez_client.models import DatasetType, SourceType, JobType, RunState
 from marquez_client.clients import Clients
 
-import mock
 import uuid
-import pytz
-from pyrfc3339 import generate
-import datetime
 import logging
 import logging.config
 import yaml
+import mock
+import os
 
 _NAMESPACE = "my-namespace"
 log = logging.getLogger(__name__)
 
 
-class TestMarquezWriteOnlyClient(unittest.TestCase):
+class TestMarquezWriteOnlyClientHttp(unittest.TestCase):
     def setUp(self):
         log.debug("MarquezWriteOnlyClient.setup(): ")
 
@@ -38,19 +35,20 @@ class TestMarquezWriteOnlyClient(unittest.TestCase):
             logging.config.dictConfig(yamlConfig)
             log.info("loaded logConfig.yaml")
 
-        self.client_wo = Clients.new_write_only_client()
-        log.info("created marquez_client_wo.")
+        os.environ['MARQUEZ_BACKEND'] = 'http'
+        self.client_wo_http = Clients.new_write_only_client()
+        log.info("created marquez_client_wo_http.")
 
-    def test_create_namespace(self):
-        log.info("test_create_namespace()")
-
+    @mock.patch("marquez_client.http_backend.HttpBackend.put")
+    def test_create_namespace(self, mock_put):
         owner_name = "me"
         description = "my namespace for testing."
 
-        self.client_wo.create_namespace(
+        self.client_wo_http.create_namespace(
             _NAMESPACE, owner_name, description)
 
-    def test_create_dataset(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.put")
+    def test_create_dataset(self, mock_put):
         dataset_name = "my-dataset"
         description = "My dataset for testing."
 
@@ -72,7 +70,7 @@ class TestMarquezWriteOnlyClient(unittest.TestCase):
             }
         ]
 
-        self.client_wo.create_dataset(
+        self.client_wo_http.create_dataset(
             namespace_name=_NAMESPACE,
             dataset_name=dataset_name,
             dataset_type=DatasetType.DB_TABLE,
@@ -85,20 +83,22 @@ class TestMarquezWriteOnlyClient(unittest.TestCase):
             tags=None
         )
 
-    def test_create_datasource(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.put")
+    def test_create_datasource(self, mock_put):
         source_name = "flight_schedules_db"
         source_type = SourceType.POSTGRESQL
         source_url = "jdbc:postgresql://localhost:5432/test?" \
                      "user=fred&password=secret&ssl=true"
         description = "PostgreSQL - flight schedules database"
 
-        self.client_wo.create_source(
+        self.client_wo_http.create_source(
             source_name=source_name,
             source_type=source_type,
             connection_url=source_url,
             description=description)
 
-    def test_create_job(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.put")
+    def test_create_job(self, mock_put):
         job_name = "my-job"
         input_dataset = [
             {
@@ -118,7 +118,7 @@ class TestMarquezWriteOnlyClient(unittest.TestCase):
             "SQL": "SELECT * FROM public.mytable;"
         }
 
-        self.client_wo.create_job(
+        self.client_wo_http.create_job(
             namespace_name=_NAMESPACE,
             job_name=job_name,
             job_type=JobType.BATCH,
@@ -128,7 +128,8 @@ class TestMarquezWriteOnlyClient(unittest.TestCase):
             context=context
         )
 
-    def test_create_job_run(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.post")
+    def test_create_job_run(self, mock_post):
         run_id = str(uuid.uuid4())
         job_name = "my-job"
         run_args = {
@@ -140,7 +141,7 @@ class TestMarquezWriteOnlyClient(unittest.TestCase):
         # created_at = str(generate(datetime.datetime.utcnow()
         #                          .replace(tzinfo=pytz.utc)))
 
-        self.client_wo.create_job_run(
+        self.client_wo_http.create_job_run(
             namespace_name=_NAMESPACE,
             job_name=job_name,
             run_id=run_id,
@@ -150,25 +151,29 @@ class TestMarquezWriteOnlyClient(unittest.TestCase):
             mark_as_running=False
         )
 
-    def test_mark_job_run_as_start(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.post")
+    def test_mark_job_run_as_start(self, mock_post):
         run_id = str(uuid.uuid4())
 
-        self.client_wo.mark_job_run_as_started(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_started(run_id=run_id)
 
-    def test_mark_job_run_as_completed(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.post")
+    def test_mark_job_run_as_completed(self, mock_post):
         run_id = str(uuid.uuid4())
 
-        self.client_wo.mark_job_run_as_completed(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_completed(run_id=run_id)
 
-    def test_mark_job_run_as_failed(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.post")
+    def test_mark_job_run_as_failed(self, mock_post):
         run_id = str(uuid.uuid4())
 
-        self.client_wo.mark_job_run_as_failed(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_failed(run_id=run_id)
 
-    def test_mark_job_run_as_aborted(self):
+    @mock.patch("marquez_client.http_backend.HttpBackend.post")
+    def test_mark_job_run_as_aborted(self, mock_post):
         run_id = str(uuid.uuid4())
 
-        self.client_wo.mark_job_run_as_aborted(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_aborted(run_id=run_id)
 
 
 if __name__ == '__main__':

@@ -10,11 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
-log = logging.getLogger(__name__)
-
-
 class Backend:
     def put(self, path, headers, json):
         pass
