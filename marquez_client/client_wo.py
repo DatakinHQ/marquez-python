@@ -10,18 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import os
-import requests
-import time
-import uuid
 import logging
+import uuid
 
-from .models import DatasetType, SourceType, JobType
-from marquez_client import errors
-from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
-from marquez_client.version import VERSION
+import time
 from six.moves.urllib.parse import quote
+
+from marquez_client.version import VERSION
+from .models import DatasetType, SourceType, JobType
 
 _API_PATH = '/api/v1'
 _USER_AGENT = f'marquez-python/{VERSION}'
@@ -34,13 +30,9 @@ log = logging.getLogger(__name__)
 class MarquezWriteOnlyClient(object):
     def __init__(self, backend):
         self._backend = backend
-        self._api_base = _API_PATH
-        log.debug(self._api_base)
 
     # Namespace API
     def create_namespace(self, namespace_name, owner_name, description=None):
-        log.debug("create_namespace()")
-
         MarquezWriteOnlyClient.\
             _check_name_length(namespace_name, 'namespace_name')
         MarquezWriteOnlyClient._check_name_length(owner_name, 'owner_name')
@@ -61,8 +53,6 @@ class MarquezWriteOnlyClient(object):
     # Source API
     def create_source(self, source_name, source_type, connection_url,
                       description=None):
-        log.debug("create_source()")
-
         MarquezWriteOnlyClient._check_name_length(source_name, 'source_name')
         MarquezWriteOnlyClient._is_instance_of(source_type, SourceType)
 
@@ -86,8 +76,6 @@ class MarquezWriteOnlyClient(object):
                        physical_name, source_name, run_id,
                        description=None, schema_location=None,
                        fields=None, tags=None):
-        log.debug("create_dataset()")
-
         MarquezWriteOnlyClient.\
             _check_name_length(namespace_name, 'namespace_name')
         MarquezWriteOnlyClient.\
@@ -133,8 +121,6 @@ class MarquezWriteOnlyClient(object):
     def create_job(self, namespace_name, job_name, job_type,
                    location=None, input_dataset=None,
                    output_dataset=None, description=None, context=None):
-        log.debug("create_job()")
-
         MarquezWriteOnlyClient.\
             _check_name_length(namespace_name, 'namespace_name')
         MarquezWriteOnlyClient._check_name_length(job_name, 'job_name')
@@ -165,8 +151,6 @@ class MarquezWriteOnlyClient(object):
                        nominal_start_time=None,
                        nominal_end_time=None, run_args=None,
                        mark_as_running=False):
-        log.debug("create_job_run()")
-
         MarquezWriteOnlyClient.\
             _check_name_length(namespace_name, 'namespace_name')
         MarquezWriteOnlyClient._check_name_length(job_name, 'job_name')
@@ -196,28 +180,18 @@ class MarquezWriteOnlyClient(object):
         return response
 
     def mark_job_run_as_started(self, run_id):
-        log.debug("mark_job_run_as_started()")
-
         return self.__mark_job_run_as(run_id, 'start')
 
     def mark_job_run_as_completed(self, run_id):
-        log.debug("mark_job_run_as_completed()")
-
         return self.__mark_job_run_as(run_id, 'complete')
 
     def mark_job_run_as_failed(self, run_id):
-        log.debug("mark_job_run_as_failed()")
-
         return self.__mark_job_run_as(run_id, 'fail')
 
     def mark_job_run_as_aborted(self, run_id):
-        log.debug("mark_job_run_as_aborted()")
-
         return self.__mark_job_run_as(run_id, 'abort')
 
     def __mark_job_run_as(self, run_id, action):
-        log.debug("__mark_job_run_as()")
-
         MarquezWriteOnlyClient._is_valid_uuid(run_id, 'run_id')
 
         return self._backend.post(
@@ -229,7 +203,7 @@ class MarquezWriteOnlyClient(object):
     # Common
     def _url(self, path, *args):
         encoded_args = [quote(arg.encode('utf-8'), safe='') for arg in args]
-        return f'{self._api_base}{path.format(*encoded_args)}'
+        return f'{_API_PATH}{path.format(*encoded_args)}'
 
     @staticmethod
     def _now_ms():

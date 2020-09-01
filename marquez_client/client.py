@@ -23,6 +23,8 @@ from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
 from marquez_client.version import VERSION
 from six.moves.urllib.parse import quote
 
+from marquez_client.utils import Utils
+
 _API_PATH = '/api/v1'
 _USER_AGENT = f'marquez-python/{VERSION}'
 _HEADERS = {'User-Agent': _USER_AGENT}
@@ -33,7 +35,7 @@ log = logging.getLogger(__name__)
 # Marquez Client
 class MarquezClient(object):
     def __init__(self, url, timeout_ms=None):
-        self._timeout = self._to_seconds(timeout_ms or os.environ.get(
+        self._timeout = Utils.to_seconds(timeout_ms or os.environ.get(
             'MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS)
         )
 
