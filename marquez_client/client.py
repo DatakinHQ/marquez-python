@@ -10,20 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-import os
-import requests
-import time
-import uuid
 import logging
+import os
 
-from .models import DatasetType, SourceType, JobType
-from marquez_client import errors
-from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
-from marquez_client.version import VERSION
+import requests
 from six.moves.urllib.parse import quote
 
+from marquez_client import errors
+from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
 from marquez_client.utils import Utils
+from marquez_client.version import VERSION
+from marquez_client.models import DatasetType, SourceType, JobType
 
 _API_PATH = '/api/v1'
 _USER_AGENT = f'marquez-python/{VERSION}'
@@ -45,8 +42,8 @@ class MarquezClient(object):
 
     # Namespace API
     def create_namespace(self, namespace_name, owner_name, description=None):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(owner_name, 'owner_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(owner_name, 'owner_name')
 
         payload = {
             'ownerName': owner_name
@@ -61,7 +58,7 @@ class MarquezClient(object):
         )
 
     def get_namespace(self, namespace_name):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
 
         return self._get(self._url('/namespaces/{0}', namespace_name))
 
@@ -77,10 +74,10 @@ class MarquezClient(object):
     # Source API
     def create_source(self, source_name, source_type, connection_url,
                       description=None):
-        MarquezClient._check_name_length(source_name, 'source_name')
-        MarquezClient._is_instance_of(source_type, SourceType)
+        Utils.check_name_length(source_name, 'source_name')
+        Utils.is_instance_of(source_type, SourceType)
 
-        MarquezClient._is_valid_connection_url(connection_url)
+        Utils.is_valid_connection_url(connection_url)
 
         payload = {
             'type': source_type.value,
@@ -94,7 +91,7 @@ class MarquezClient(object):
                          payload=payload)
 
     def get_source(self, source_name):
-        MarquezClient._check_name_length(source_name, 'source_name')
+        Utils.check_name_length(source_name, 'source_name')
 
         return self._get(self._url('/sources/{0}', source_name))
 
@@ -113,15 +110,15 @@ class MarquezClient(object):
                        description=None, run_id=None,
                        schema_location=None,
                        fields=None, tags=None):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(dataset_name, 'dataset_name')
-        MarquezClient._is_instance_of(dataset_type, DatasetType)
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(dataset_name, 'dataset_name')
+        Utils.is_instance_of(dataset_type, DatasetType)
 
         if dataset_type == DatasetType.STREAM:
             MarquezClient._is_none(schema_location, 'schema_location')
 
-        MarquezClient._check_name_length(physical_name, 'physical_name')
-        MarquezClient._check_name_length(source_name, 'source_name')
+        Utils.check_name_length(physical_name, 'physical_name')
+        Utils.check_name_length(source_name, 'source_name')
 
         payload = {
             'type': dataset_type.value,
@@ -151,8 +148,8 @@ class MarquezClient(object):
         )
 
     def get_dataset(self, namespace_name, dataset_name):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(dataset_name, 'dataset_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(dataset_name, 'dataset_name')
 
         return self._get(
             self._url('/namespaces/{0}/datasets/{1}',
@@ -160,7 +157,7 @@ class MarquezClient(object):
         )
 
     def list_datasets(self, namespace_name, limit=None, offset=None):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
 
         return self._get(
             self._url('/namespaces/{0}/datasets', namespace_name),
@@ -171,8 +168,8 @@ class MarquezClient(object):
         )
 
     def tag_dataset(self, namespace_name, dataset_name, tag_name):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(dataset_name, 'dataset_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(dataset_name, 'dataset_name')
 
         if not tag_name:
             raise ValueError('tag_name must not be None')
@@ -184,10 +181,10 @@ class MarquezClient(object):
 
     def tag_dataset_field(self, namespace_name, dataset_name, field_name,
                           tag_name):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(dataset_name, 'dataset_name')
-        MarquezClient._check_name_length(field_name, 'field_name')
-        MarquezClient._check_name_length(tag_name, 'tag_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(dataset_name, 'dataset_name')
+        Utils.check_name_length(field_name, 'field_name')
+        Utils.check_name_length(tag_name, 'tag_name')
 
         return self._post(
             self._url('/namespaces/{0}/datasets/{1}/fields/{2}/tags/{3}',
@@ -198,9 +195,9 @@ class MarquezClient(object):
     def create_job(self, namespace_name, job_name, job_type, location=None,
                    input_dataset=None,
                    output_dataset=None, description=None, context=None):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(job_name, 'job_name')
-        MarquezClient._is_instance_of(job_type, JobType)
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(job_name, 'job_name')
+        Utils.is_instance_of(job_type, JobType)
 
         payload = {
             'inputs': input_dataset or [],
@@ -223,15 +220,15 @@ class MarquezClient(object):
         )
 
     def get_job(self, namespace_name, job_name):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(job_name, 'job_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(job_name, 'job_name')
 
         return self._get(
             self._url('/namespaces/{0}/jobs/{1}', namespace_name, job_name)
         )
 
     def list_jobs(self, namespace_name, limit=None, offset=None):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
 
         return self._get(
             self._url('/namespaces/{0}/jobs', namespace_name),
@@ -245,8 +242,8 @@ class MarquezClient(object):
                        nominal_start_time=None,
                        nominal_end_time=None, run_args=None,
                        mark_as_running=False):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(job_name, 'job_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(job_name, 'job_name')
 
         payload = {}
 
@@ -273,8 +270,8 @@ class MarquezClient(object):
 
     def list_job_runs(self, namespace_name, job_name, limit=None,
                       offset=None):
-        MarquezClient._check_name_length(namespace_name, 'namespace_name')
-        MarquezClient._check_name_length(job_name, 'job_name')
+        Utils.check_name_length(namespace_name, 'namespace_name')
+        Utils.check_name_length(job_name, 'job_name')
 
         return self._get(
             self._url(
@@ -314,7 +311,7 @@ class MarquezClient(object):
         )
 
     def __mark_job_run_as(self, run_id, action):
-        MarquezClient._is_valid_uuid(run_id, 'run_id')
+        Utils.is_valid_uuid(run_id, 'run_id')
 
         return self._post(
             self._url('/jobs/runs/{0}/{1}', run_id, action), payload={}
@@ -360,7 +357,7 @@ class MarquezClient(object):
         return self._response(response, as_json)
 
     def _get(self, url, params=None, as_json=True):
-        now_ms = self._now_ms()
+        now_ms = Utils.now_ms()
 
         response = requests.get(
             url, params=params, headers=_HEADERS, timeout=self._timeout)
@@ -376,10 +373,6 @@ class MarquezClient(object):
 
         return self._response(response, as_json)
 
-    @staticmethod
-    def _now_ms():
-        return int(round(time.time() * 1000))
-
     def _response(self, response, as_json):
         try:
             response.raise_for_status()
@@ -392,45 +385,3 @@ class MarquezClient(object):
         # TODO: https://github.com/MarquezProject/marquez-python/issues/55
         raise errors.APIError() from e
 
-    @staticmethod
-    def _to_seconds(timeout_ms):
-        return float(timeout_ms) / 1000.0
-
-    @staticmethod
-    def _is_none(variable_value, variable_name):
-        if not variable_value:
-            raise ValueError(f"{variable_name} must not be None")
-
-    @staticmethod
-    def _check_name_length(variable_value, variable_name):
-        MarquezClient._is_none(variable_value, variable_name)
-
-        # ['namespace_name', 'owner_name', 'source_name'] <= 64
-        # ['dataset_name', 'field_name', 'job_name', 'tag_name'] <= 255
-        if variable_name in ['namespace_name', 'owner_name', 'source_name']:
-            if len(variable_value) > 64:
-                raise ValueError(f"{variable_name} length is"
-                                 f" {len(variable_value)}, must be <= 64")
-        else:
-            if len(variable_value) > 255:
-                raise ValueError(f"{variable_name} length is"
-                                 f" {len(variable_value)}, must be <= 255")
-
-    @staticmethod
-    def _is_valid_uuid(variable_value, variable_name):
-        MarquezClient._is_none(variable_value, variable_name)
-
-        try:
-            uuid.UUID(str(variable_value))
-        except ValueError:
-            raise ValueError(f"{variable_name} must be a valid UUID")
-
-    @staticmethod
-    def _is_instance_of(variable_value, variable_enum_type):
-        if not isinstance(variable_value, variable_enum_type):
-            raise ValueError(f"{variable_value} must be an instance"
-                             f" of {variable_enum_type}")
-
-    @staticmethod
-    def _is_valid_connection_url(connection_url):
-        MarquezClient._is_none(connection_url, 'connection_url')
