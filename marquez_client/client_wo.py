@@ -273,30 +273,3 @@ class MarquezWriteOnlyClient(object):
     @staticmethod
     def _is_valid_connection_url(connection_url):
         MarquezWriteOnlyClient._is_none(connection_url, 'connection_url')
-
-
-'''
-    def _post(self, url, payload, as_json=True):
-        log.debug("_post()")
-
-        post_details = {}
-
-        post_details['method'] = 'POST'
-        post_details['path'] = url
-        post_details['headers'] = _HEADERS
-        post_details['payload'] = payload
-
-        log.info(post_details)
-
-    def _put(self, url, payload=None, as_json=True):
-        log.debug("_put()")
-
-        put_details = {}
-
-        put_details['method'] = 'PUT'
-        put_details['path'] = url
-        put_details['headers'] = _HEADERS
-        put_details['payload'] = payload
-
-        log.info(put_details)
-'''
