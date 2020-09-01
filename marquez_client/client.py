@@ -384,4 +384,3 @@ class MarquezClient(object):
     def _raise_api_error(self, e):
         # TODO: https://github.com/MarquezProject/marquez-python/issues/55
         raise errors.APIError() from e
-

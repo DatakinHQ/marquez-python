@@ -40,10 +40,6 @@ class Utils(object):
         return float(timeout_ms) / 1000.0
 
     @staticmethod
-    def to_seconds(timeout_ms):
-        return float(timeout_ms) / 1000.0
-
-    @staticmethod
     def is_none(variable_value, variable_name):
         if not variable_value:
             raise ValueError(f"{variable_name} must not be None")
@@ -85,4 +81,3 @@ class Utils(object):
     @staticmethod
     def now_ms():
         return int(round(time.time() * 1000))
-
