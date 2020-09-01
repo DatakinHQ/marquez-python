@@ -21,6 +21,7 @@ from marquez_client.models import DatasetFieldType, DatasetType
 
 log = logging.getLogger(__name__)
 
+
 class Utils(object):
     def make_field(name, data_type, description=None):
         if isinstance(data_type, str):

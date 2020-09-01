@@ -20,7 +20,6 @@ import yaml
 
 from marquez_client.clients import Clients
 from marquez_client.models import (SourceType, DatasetType, JobType)
-from datetime import datetime
 
 from marquez_client.utils import Utils
 
@@ -54,7 +53,6 @@ class TestAirflowDAG(unittest.TestCase):
             PHYSICAL = f'public.my_table-{i}'
             run_id = str(uuid.uuid4())
             JOB = f'my-job-{i%10}'
-            action_at = Utils.utc_now()
 
             self.client.create_namespace(NAMESPACE, OWNER)
             self.client.create_source(
