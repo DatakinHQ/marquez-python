@@ -9,7 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import datetime
 import unittest
 
 from marquez_client.models import DatasetType, SourceType, JobType, RunState
@@ -21,6 +21,8 @@ import logging.config
 import yaml
 import mock
 import os
+
+from marquez_client.utils import Utils
 
 _NAMESPACE = "my-namespace"
 log = logging.getLogger(__name__)
@@ -138,8 +140,6 @@ class TestMarquezWriteOnlyClientHttp(unittest.TestCase):
             "emailOnRetry": "true",
             "retries": "1"
         }
-        # created_at = str(generate(datetime.datetime.utcnow()
-        #                          .replace(tzinfo=pytz.utc)))
 
         self.client_wo_http.create_job_run(
             namespace_name=_NAMESPACE,
@@ -148,32 +148,40 @@ class TestMarquezWriteOnlyClientHttp(unittest.TestCase):
             nominal_start_time=None,
             nominal_end_time=None,
             run_args=run_args,
-            mark_as_running=False
+            mark_as_running=True
         )
 
     @mock.patch("marquez_client.http_backend.HttpBackend.post")
     def test_mark_job_run_as_start(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_http.mark_job_run_as_started(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_started(
+            run_id=run_id, action_at=action_at)
 
     @mock.patch("marquez_client.http_backend.HttpBackend.post")
     def test_mark_job_run_as_completed(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_http.mark_job_run_as_completed(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_completed(
+            run_id=run_id, action_at=action_at)
 
     @mock.patch("marquez_client.http_backend.HttpBackend.post")
     def test_mark_job_run_as_failed(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_http.mark_job_run_as_failed(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_failed(
+            run_id=run_id, action_at=action_at)
 
     @mock.patch("marquez_client.http_backend.HttpBackend.post")
     def test_mark_job_run_as_aborted(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_http.mark_job_run_as_aborted(run_id=run_id)
+        self.client_wo_http.mark_job_run_as_aborted(
+            run_id=run_id, action_at=action_at)
 
 
 if __name__ == '__main__':

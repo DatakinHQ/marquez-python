@@ -20,6 +20,9 @@ import yaml
 
 from marquez_client.clients import Clients
 from marquez_client.models import (SourceType, DatasetType, JobType)
+from datetime import datetime
+
+from marquez_client.utils import Utils
 
 _NAMESPACE = 'default'
 
@@ -51,6 +54,7 @@ class TestAirflowDAG(unittest.TestCase):
             PHYSICAL = f'public.my_table-{i}'
             run_id = str(uuid.uuid4())
             JOB = f'my-job-{i%10}'
+            action_at = Utils.utc_now()
 
             self.client.create_namespace(NAMESPACE, OWNER)
             self.client.create_source(
@@ -61,15 +65,15 @@ class TestAirflowDAG(unittest.TestCase):
                 NAMESPACE, DATASET, DatasetType.DB_TABLE,
                 PHYSICAL, SOURCE, run_id)
             self.client.create_job(NAMESPACE, JOB, JobType.BATCH)
-            self.client.create_job_run(NAMESPACE, JOB, run_id)
-            self.client.mark_job_run_as_started(run_id)
+            self.client.create_job_run(NAMESPACE, JOB, run_id,
+                                       mark_as_running=True)
 
             udiff = (i % 10 - random.randrange(10))
 
             if udiff >= -1 or udiff <= 1:
-                self.client.mark_job_run_as_failed(run_id)
+                self.client.mark_job_run_as_failed(run_id, Utils.utc_now())
             else:
-                self.client.mark_job_run_as_completed(run_id)
+                self.client.mark_job_run_as_completed(run_id, Utils.utc_now())
 
 
 if __name__ == '__main__':

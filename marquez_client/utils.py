@@ -10,11 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import uuid
+import pytz
 import time
 
+from datetime import datetime
+from pyrfc3339 import generate
 from marquez_client.models import DatasetFieldType, DatasetType
 
+log = logging.getLogger(__name__)
 
 class Utils(object):
     def make_field(name, data_type, description=None):
@@ -81,3 +86,8 @@ class Utils(object):
     @staticmethod
     def now_ms():
         return int(round(time.time() * 1000))
+
+    @staticmethod
+    def utc_now():
+        return str(generate(datetime.utcnow().replace(tzinfo=pytz.utc),
+                            microseconds=True))

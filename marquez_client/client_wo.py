@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import logging
 
 from six.moves.urllib.parse import quote
@@ -167,27 +168,29 @@ class MarquezWriteOnlyClient(object):
             json=payload)
 
         if mark_as_running:
-            response = self.mark_job_run_as_started(run_id)
+            response = self.mark_job_run_as_started(
+                run_id, str(datetime.datetime.utcnow()))
 
         return response
 
-    def mark_job_run_as_started(self, run_id):
-        return self.__mark_job_run_as(run_id, 'start')
+    def mark_job_run_as_started(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'start', action_at)
 
-    def mark_job_run_as_completed(self, run_id):
-        return self.__mark_job_run_as(run_id, 'complete')
+    def mark_job_run_as_completed(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'complete', action_at)
 
-    def mark_job_run_as_failed(self, run_id):
-        return self.__mark_job_run_as(run_id, 'fail')
+    def mark_job_run_as_failed(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'fail', action_at)
 
-    def mark_job_run_as_aborted(self, run_id):
-        return self.__mark_job_run_as(run_id, 'abort')
+    def mark_job_run_as_aborted(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'abort', action_at)
 
-    def __mark_job_run_as(self, run_id, action):
+    def __mark_job_run_as(self, run_id, action, action_at=None):
         Utils.is_valid_uuid(run_id, 'run_id')
 
         return self._backend.post(
-            self.path('/jobs/runs/{0}/{1}', run_id, action),
+            self.path('/jobs/runs/{0}/{1}?at={2}', run_id, action,
+                      action_at if action_at else Utils.utc_now()),
             headers=_HEADERS,
             json={}
         )

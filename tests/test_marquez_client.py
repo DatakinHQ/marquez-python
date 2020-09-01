@@ -10,18 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+import logging.config
 import unittest
+import uuid
+
+import mock
+import yaml
 
 import marquez_client
 from marquez_client.models import DatasetType, SourceType, JobType, RunState
-import mock
-import uuid
-import pytz
-from pyrfc3339 import generate
-import datetime
-import logging
-import logging.config
-import yaml
+from marquez_client.utils import Utils
 
 _NAMESPACE = "my-namespace"
 log = logging.getLogger(__name__)
@@ -269,6 +268,7 @@ class TestMarquezClient(unittest.TestCase):
     @mock.patch("marquez_client.client.MarquezClient._post")
     def test_create_job_run(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
         job_name = "my-job"
         run_args = {
@@ -277,17 +277,15 @@ class TestMarquezClient(unittest.TestCase):
             "emailOnRetry": "true",
             "retries": "1"
         }
-        created_at = str(generate(datetime.datetime.utcnow()
-                                  .replace(tzinfo=pytz.utc)))
 
         mock_post.return_value = {
             'id': f'{run_id}',
-            'createdAt': f'{created_at}',
+            'createdAt': '2020-08-12T22:33:02.787228Z',
             'updatedAt': '2020-08-12T22:33:02.787228Z',
             'nominalStartTime': None,
             'nominalEndTime': None,
             'state': 'NEW',
-            'startedAt': None,
+            'startedAt': f'{action_at}',
             'endedAt': None,
             'durationMs': None,
             'run_args': {
@@ -305,16 +303,17 @@ class TestMarquezClient(unittest.TestCase):
             nominal_start_time=None,
             nominal_end_time=None,
             run_args=run_args,
-            mark_as_running=False
+            mark_as_running=True
         )
 
         assert response['id'] is not None
         assert str(response['run_args']) == str(run_args)
-        assert str(response['createdAt']) == created_at
+        assert str(response['startedAt']) == action_at
 
     @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_start(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
         mock_post.return_value = {
             'id': f'{run_id}',
@@ -323,20 +322,23 @@ class TestMarquezClient(unittest.TestCase):
             'nominalStartTime': None,
             'nominalEndTime': None,
             'state': 'RUNNING',
-            'startedAt': '2020-08-13T17:56:39.516802Z',
+            'startedAt': f'{action_at}',
             'endedAt': None,
             'durationMs': None,
             'args': {}
         }
 
-        response = self.client.mark_job_run_as_started(run_id=run_id)
+        response = self.client.mark_job_run_as_started(
+            run_id=run_id, action_at=action_at)
 
         assert str(response['id']) == run_id
         assert str(response['state']) == RunState.RUNNING.value
+        assert str(response['startedAt']) == action_at
 
     @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_completed(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
         mock_post.return_value = {
             'id': f'{run_id}',
@@ -345,20 +347,24 @@ class TestMarquezClient(unittest.TestCase):
             'nominalStartTime': None,
             'nominalEndTime': None,
             'state': 'COMPLETED',
-            'startedAt': '2020-08-13T17:56:39.516802Z',
+            # 'startedAt': '2020-08-13T17:56:39.516802Z',
+            'startedAt': f'{action_at}',
             'endedAt': None,
             'durationMs': None,
             'args': {}
         }
 
-        response = self.client.mark_job_run_as_completed(run_id=run_id)
+        response = self.client.mark_job_run_as_completed(
+            run_id=run_id, action_at=action_at)
 
         assert str(response['id']) == run_id
         assert str(response['state']) == RunState.COMPLETED.value
+        assert str(response['startedAt']) == action_at
 
     @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_failed(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
         mock_post.return_value = {
             'id': f'{run_id}',
@@ -367,20 +373,23 @@ class TestMarquezClient(unittest.TestCase):
             'nominalStartTime': None,
             'nominalEndTime': None,
             'state': 'FAILED',
-            'startedAt': '2020-08-13T17:56:39.516802Z',
+            'startedAt': f'{action_at}',
             'endedAt': None,
             'durationMs': None,
             'args': {}
         }
 
-        response = self.client.mark_job_run_as_failed(run_id=run_id)
+        response = self.client.mark_job_run_as_failed(
+            run_id=run_id, action_at=action_at)
 
         assert str(response['id']) == run_id
         assert str(response['state']) == RunState.FAILED.value
+        assert str(response['startedAt']) == action_at
 
     @mock.patch("marquez_client.client.MarquezClient._post")
     def test_mark_job_run_as_aborted(self, mock_post):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
         mock_post.return_value = {
             'id': f'{run_id}',
@@ -389,16 +398,18 @@ class TestMarquezClient(unittest.TestCase):
             'nominalStartTime': None,
             'nominalEndTime': None,
             'state': 'ABORTED',
-            'startedAt': '2020-08-13T17:56:39.516802Z',
+            'startedAt': f'{action_at}',
             'endedAt': None,
             'durationMs': None,
             'args': {}
         }
 
-        response = self.client.mark_job_run_as_aborted(run_id=run_id)
+        response = self.client.mark_job_run_as_aborted(
+            run_id=run_id, action_at=action_at)
 
         assert str(response['id']) == run_id
         assert str(response['state']) == RunState.ABORTED.value
+        assert str(response['startedAt']) == action_at
 
 
 if __name__ == '__main__':

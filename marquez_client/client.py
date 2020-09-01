@@ -18,9 +18,9 @@ from six.moves.urllib.parse import quote
 
 from marquez_client import errors
 from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
+from marquez_client.models import DatasetType, SourceType, JobType
 from marquez_client.utils import Utils
 from marquez_client.version import VERSION
-from marquez_client.models import DatasetType, SourceType, JobType
 
 _API_PATH = '/api/v1'
 _USER_AGENT = f'marquez-python/{VERSION}'
@@ -289,17 +289,17 @@ class MarquezClient(object):
 
         return self._get(self._url('/jobs/runs/{0}', run_id))
 
-    def mark_job_run_as_started(self, run_id):
-        return self.__mark_job_run_as(run_id, 'start')
+    def mark_job_run_as_started(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'start', action_at)
 
-    def mark_job_run_as_completed(self, run_id):
-        return self.__mark_job_run_as(run_id, 'complete')
+    def mark_job_run_as_completed(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'complete', action_at)
 
-    def mark_job_run_as_failed(self, run_id):
-        return self.__mark_job_run_as(run_id, 'fail')
+    def mark_job_run_as_failed(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'fail', action_at)
 
-    def mark_job_run_as_aborted(self, run_id):
-        return self.__mark_job_run_as(run_id, 'abort')
+    def mark_job_run_as_aborted(self, run_id, action_at=None):
+        return self.__mark_job_run_as(run_id, 'abort', action_at)
 
     def list_tags(self, limit=None, offset=None):
         return self._get(
@@ -310,11 +310,12 @@ class MarquezClient(object):
             }
         )
 
-    def __mark_job_run_as(self, run_id, action):
+    def __mark_job_run_as(self, run_id, action, action_at=None):
         Utils.is_valid_uuid(run_id, 'run_id')
 
         return self._post(
-            self._url('/jobs/runs/{0}/{1}', run_id, action), payload={}
+            self._url('/jobs/runs/{0}/{1}?at={2}', run_id, action,
+                      action_at if action_at else Utils.utc_now()), payload={}
         )
 
     # Common
@@ -323,7 +324,7 @@ class MarquezClient(object):
         return f'{self._api_base}{path.format(*encoded_args)}'
 
     def _post(self, url, payload, as_json=True):
-        now_ms = self._now_ms()
+        now_ms = Utils.now_ms()
 
         response = requests.post(
             url=url, headers=_HEADERS, json=payload, timeout=self._timeout)
@@ -340,7 +341,7 @@ class MarquezClient(object):
         return self._response(response, as_json)
 
     def _put(self, url, payload=None, as_json=True):
-        now_ms = self._now_ms()
+        now_ms = Utils.now_ms()
 
         response = requests.put(
             url=url, headers=_HEADERS, json=payload, timeout=self._timeout)

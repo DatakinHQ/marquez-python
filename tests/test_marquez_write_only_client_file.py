@@ -9,7 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import datetime
 import unittest
 
 from marquez_client.models import DatasetType, SourceType, JobType, RunState
@@ -20,6 +20,8 @@ import logging
 import logging.config
 import yaml
 import os
+
+from marquez_client.utils import Utils
 
 _NAMESPACE = "my-namespace"
 log = logging.getLogger(__name__)
@@ -134,8 +136,6 @@ class TestMarquezWriteOnlyClientFile(unittest.TestCase):
             "emailOnRetry": "true",
             "retries": "1"
         }
-        # created_at = str(generate(datetime.datetime.utcnow()
-        #                          .replace(tzinfo=pytz.utc)))
 
         self.client_wo_file.create_job_run(
             namespace_name=_NAMESPACE,
@@ -144,28 +144,36 @@ class TestMarquezWriteOnlyClientFile(unittest.TestCase):
             nominal_start_time=None,
             nominal_end_time=None,
             run_args=run_args,
-            mark_as_running=False
+            mark_as_running=True
         )
 
     def test_mark_job_run_as_start(self):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_file.mark_job_run_as_started(run_id=run_id)
+        self.client_wo_file.mark_job_run_as_started(
+            run_id=run_id, action_at=action_at)
 
     def test_mark_job_run_as_completed(self):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_file.mark_job_run_as_completed(run_id=run_id)
+        self.client_wo_file.mark_job_run_as_completed(
+            run_id=run_id, action_at=action_at)
 
     def test_mark_job_run_as_failed(self):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_file.mark_job_run_as_failed(run_id=run_id)
+        self.client_wo_file.mark_job_run_as_failed(
+            run_id=run_id, action_at=action_at)
 
     def test_mark_job_run_as_aborted(self):
         run_id = str(uuid.uuid4())
+        action_at = Utils.utc_now()
 
-        self.client_wo_file.mark_job_run_as_aborted(run_id=run_id)
+        self.client_wo_file.mark_job_run_as_aborted(
+            run_id=run_id, action_at=action_at)
 
 
 if __name__ == '__main__':
