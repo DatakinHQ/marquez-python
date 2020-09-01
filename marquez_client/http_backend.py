@@ -11,20 +11,18 @@
 # limitations under the License.
 
 import logging
-import requests
-import os
 
-from marquez_client.constants import (DEFAULT_TIMEOUT_MS)
-from marquez_client.backend import Backend
+import requests
+
 from marquez_client import errors
+from marquez_client.backend import Backend
 
 log = logging.getLogger(__name__)
 
 
 class HttpBackend(Backend):
-    def __init__(self, url):
-        self._timeout = self._to_seconds(
-            os.environ.get('MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS))
+    def __init__(self, url, timeout):
+        self._timeout = timeout
         self._url = url
 
     def put(self, path, headers, json):
@@ -52,10 +50,6 @@ class HttpBackend(Backend):
             self._raise_api_error(e)
 
         return response.json() if as_json else response.text
-
-    @staticmethod
-    def _to_seconds(timeout_ms):
-        return float(timeout_ms) / 1000.0
 
     def _raise_api_error(self, e):
         # TODO: https://github.com/MarquezProject/marquez-python/issues/55

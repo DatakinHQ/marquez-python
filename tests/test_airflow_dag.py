@@ -10,17 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import logging
 import logging.config
-import yaml
-import mock
-import os
-import uuid
 import random
+import unittest
+import uuid
 
-from marquez_client.models import (SourceType, DatasetType, JobType)
+import yaml
+
 from marquez_client.clients import Clients
+from marquez_client.models import (SourceType, DatasetType, JobType)
 
 _NAMESPACE = 'default'
 

@@ -18,7 +18,9 @@ from marquez_client.file_backend import FileBackend
 from marquez_client.http_backend import HttpBackend
 from marquez_client.constants import (DEFAULT_MARQUEZ_BACKEND,
                                       DEFAULT_MARQUEZ_URL,
-                                      DEFAULT_MARQUEZ_FILE)
+                                      DEFAULT_MARQUEZ_FILE,
+                                      DEFAULT_TIMEOUT_MS)
+from marquez_client.utils import Utils
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +46,9 @@ class Clients(object):
 
         if backend_env == 'http':
             url = os.environ.get('MARQUEZ_URL', DEFAULT_MARQUEZ_URL)
-            return HttpBackend(url)
+            timeout = Utils.to_seconds(
+                os.environ.get('MARQUEZ_TIMEOUT_MS', DEFAULT_TIMEOUT_MS))
+            return HttpBackend(url, timeout)
         elif backend_env == 'file':
             file = os.environ.get('MARQUEZ_FILE', DEFAULT_MARQUEZ_FILE)
             return FileBackend(file)
